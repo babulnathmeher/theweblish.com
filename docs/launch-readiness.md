@@ -1,0 +1,40 @@
+# The Weblish launch readiness
+
+Reviewed 2026-10-16. **Status: not production-ready.** A successful local build proves the application compiles; it does not approve content, infrastructure, data recovery, or external integrations. Preserve `noindex` on pages awaiting reviewed content.
+
+## Content and route gates
+
+| Item | Current status | Verification before release |
+| --- | --- | --- |
+| Original logo | Original `public/images/logo.png` is now used in the shared header | Compare desktop/mobile renders for color and aspect ratio; obtain light/dark guidance for footer and social use. |
+| Portfolio and website examples | GIET hero name and visual copy supplied; original project imagery and broader portfolio details remain pending | Check each name, project URL, scope, image, alt text, and written publication permission; review both home and website landing page. |
+| Client roster and proof | No approved logos, testimonials, metrics, or case studies supplied | Obtain source and approval for each claim or asset; compare rendered text with source. |
+| Website package terms | No approved inclusions, exclusions, price, or timeline | Owner approves written package terms; confirm landing page and enquiry follow-up match them. |
+| TW Automate | Name only; no confirmed functionality or availability | Owner supplies and approves the exact product description and CTA destination; test that destination. |
+| Agency and service copy | Route names confirmed, detailed claims unreviewed | Owner reviews factual copy, contact channels, service scope, and About page. |
+| Seven legacy article URLs | Five now serve published database posts and appear in the sitemap; two still return 404 (`how-to-increase-leads-from-landing-pages`, `how-to-choose-a-perfect-domain-name-for-your-brand`). Original source files and independent editorial approval were not supplied for this audit | Review provenance, body, author, date, images, and permission for each published post; import and publish the remaining originals only after review. Confirm all seven exact URLs, metadata, and sitemap entries. Do not silently unpublish existing posts. |
+| Legacy route audit and captured assets | `docs/route-map.md`, `docs/reference-audit.md`, `docs/reference/page-catalog.md`, and captures absent | Compare every audited canonical URL and redirect with `docs/route-migration-checklist.md`; test permanent redirects and trailing-slash targets. |
+
+## Technical and operational gates
+
+| Item | Current status | Verification before release |
+| --- | --- | --- |
+| S3-compatible media storage | Local development credentials are configured. On 2026-10-16, an authenticated temporary PNG upload returned 201, its public URL returned the exact image bytes, invalid bytes returned 422, anonymous upload returned 401, and the temporary object/metadata were deleted. This is not a staging or production check | Repeat on staging with scoped deployment credentials, verify a real blog/portfolio cover in a rendered page, retention and access policy, and record cleanup. |
+| SMTP notifications | Code exists; all local SMTP delivery settings unset | Deliver one lead and one contact notification to test recipients; simulate SMTP failure and confirm database records still persist. |
+| MariaDB health and database accounts | The original port 3306 server remains unrepaired after Aria and InnoDB errors. Development now uses an isolated restored server on port 3317; its local connection still uses passwordless root | Complete qualified review of the original data directory; create restricted app and migration users on a healthy deployment server and verify operations/grants. See [database-recovery.md](database-recovery.md). |
+| Development backup and isolated restore | A fresh logical export was restored into a separate MariaDB data directory on port 3317; representative table counts matched. The earlier cold snapshot remains untested | Retain export hash and sensitive backup, repeat restore and representative record checks as part of a staging recovery drill. |
+| Production host | No host selected or hosting configuration present | Select a Node-capable host meeting `docs/deployment-preparation.md`; verify runtime, environment, network, TLS, storage, logs, and health checks in staging. |
+| Source control and release artifact | This workspace has no `.git` directory, so the reviewed source cannot yet be tied to a commit or a rollback artifact | Place the project in the intended repository, review the full diff including ignored files, record an immutable release revision, and build a restorable artifact. Never commit `.env` or backup files. |
+| Staging indexing | Local production build with `STAGING_NOINDEX=true` returned `X-Robots-Tag: noindex, nofollow` on `/` and `Disallow: /` in robots; no staging environment or host access control | Require host access control and repeat both requests against staging. |
+| Monitoring and recovery | Database-aware `/api/health/` returned generic 503 and `no-store` with local DB offline; no uptime/error service or alert destination configured | Trigger a staging health failure and a captured server error; confirm alerts, ownership, log redaction, and documented rollback drill. |
+| Rate-limit operations | Rate buckets are in MySQL. `npm run db:cleanup-rate-limits` previews buckets older than 24 hours; `npm run db:cleanup-rate-limits -- --apply` deletes them. Development preview found 8 eligible buckets on 2026-10-16; no deletion was run. No scheduler exists | Schedule the apply command on the selected host, monitor row growth, and test limits across multiple app instances. |
+| Support tickets | Migration is applied to isolated development database; public form and protected admin inbox are implemented | Verify submission, reference, admin status/notes, rate limit, and denial of direct anonymous admin access on the restored database; see [support-tickets.md](support-tickets.md). |
+| Portfolio case studies | Migration is applied to isolated development database; database and authenticated HTTP creation/publication tests passed; no real case study or image was seeded | Add approved client content, test actual media selection, and repeat draft/publication checks in staging with restricted credentials; see [portfolio-management.md](portfolio-management.md). |
+| Managed services | Migration is applied to the isolated development database. Local `SERVICE_CMS_ENABLED=true`; a 2026-10-31 HTTP smoke test passed draft creation, anonymous denial, draft 404, publication, unpublishing, and deletion with no remaining test record | Verify core URL preservation, cards/footer updates, indexing opt-in, and full staging behavior with restricted credentials before enabling in a shared environment; see [services-management.md](services-management.md). |
+| Production secrets and URL configuration | Only ignored local `.env` exists; `.env.example` has placeholders | Put secrets in host secret manager, set exact canonical and auth origins, verify no secrets in bundle/logs, rotate local bootstrap credentials before shared use. |
+| Admin operations view | `/admin/settings/` now reports configuration and database signals without exposing secret values; it also supports self-service password changes through Better Auth. This does not certify production readiness | Verify the settings page with restricted staging credentials, confirm wrong/current password handling and session revocation, and record the external release checks; see [admin-settings.md](admin-settings.md). |
+| Release regression | Local checks exist; no staging run | Run the checklist in `docs/release-checklist.md` on staging after approved content and integrations are present. |
+
+## Evidence policy
+
+Record each check with date, environment, command or URL, result, and reviewer. Mark a gate complete only after the stated verification succeeds. Development checks must not be represented as production checks. Do not copy the local passwordless root `DATABASE_URL` into any shared configuration.

@@ -1,0 +1,14 @@
+node_modules/
+.npm-cache/
+.next/
+.next.zip
+out/
+dist/
+coverage/
+*.tsbuildinfo
+src/generated/
+.env
+.env.*
+!.env.example
+.DS_Store
+npm-debug.log*

@@ -1,0 +1,6 @@
+import type { Metadata } from "next";
+import { CtaBand, PageHero, Section, SectionHeading } from "@/components/site/site-ui";
+
+export const metadata: Metadata = { title: "Customer Satisfaction", description: "Customer feedback and project experiences will be shared when verified and approved.", alternates: { canonical: "/customer-satisfaction/" }, robots: { index: false, follow: false } };
+
+export default function Page() { return <main><PageHero eyebrow="Customer satisfaction" title="Feedback should be real and attributable." description="We will publish customer experiences here when the original feedback and permission to share it are available." /><Section><SectionHeading eyebrow="What belongs here" title="Real voices, with context." description="Testimonials, ratings, and outcomes need a source. None have been added without one." /><div className="detail-list"><div><h3>Customer words</h3><p>Approved feedback in the customer&apos;s own words.</p></div><div><h3>Project context</h3><p>A clear description of the work the feedback relates to.</p></div></div></Section><CtaBand title="Have a question about working together?" text="Get in touch and we can discuss your project directly." /></main>; }

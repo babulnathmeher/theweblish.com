@@ -1,0 +1,14 @@
+# Service management
+
+The admin service workspace is at `/admin/services/`. Administrators can create a draft, edit, preview, publish, unpublish, and delete managed service content. Every page and server action calls `requireAdmin` before accessing service data. Public pages render only records with `status=PUBLISHED` and `publishedAt` no later than the current time. Markdown is rendered with raw HTML disabled.
+
+The nine standard service pages keep their established URLs. An admin can choose **Customize page** to prepare a database-backed update prefilled with the current copy; the original code-managed page remains public while the update is a draft. Publishing replaces its title, summary, icon, category, and main body while preserving the surrounding page layout. Deleting the update restores the original content. The separate `/website-development/` quote page remains managed as a landing page and is not overridden here.
+
+New services use `/digital-solution/<slug>/`. Their URLs return 404 until published. Published services appear in the services directory, public service cards, and footer. All new and updated services default to `noindex`. A published service enters the sitemap only when an admin also enables **Allow search indexing** after content review. Static, article, and reserved slugs cannot be assigned to new services.
+The slug is fixed after draft creation so published URLs are not silently changed without a reviewed redirect.
+
+## Database gate
+
+Migration `20261010000000_services` adds the `Service` table. It was applied to the isolated restored development database on port 3317 on 2026-10-13, but **not** to the original XAMPP data directory on port 3306. See [database-recovery.md](database-recovery.md). On 2026-10-31, the table and current migration status were verified and `SERVICE_CMS_ENABLED="true"` was set in the ignored local `.env`. The HTTP smoke test passed admin draft creation, anonymous denial, draft 404, publication, unpublishing, and deletion. The temporary test service was removed. This flag is local to the isolated development environment; it does not authorize enabling the editor against an unverified database.
+
+On a healthy, backed-up development or staging database, use separate migration credentials to run `npm run db:deploy`. Set `SERVICE_CMS_ENABLED="true"` in that environment only after the table is present, then rebuild and restart the app so statically rendered service pages pick up the setting. Sign in as an admin and verify: create draft, private preview, anonymous 404, publish, public page and service cards, optional sitemap entry only when indexing is enabled, edit, unpublish, and delete. Confirm anonymous and non-admin requests cannot read admin pages or invoke mutations. Do not run the migration against production as part of this local work.

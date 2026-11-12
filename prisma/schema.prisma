@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+}
+enum ServiceStatus {
+  DRAFT
+  PUBLISHED
+}
+enum PortfolioStatus {
+  DRAFT
+  PUBLISHED
+}
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED
+}
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+enum ContactActivityType {
+  NOTE
+  STATUS_CHANGE
+}
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CLIENT
+  RESOLVED
+  CLOSED
+}
+enum TicketActivityType {
+  NOTE
+  STATUS_CHANGE
+}
+enum LeadActivityType {
+  NOTE
+  STATUS_CHANGE
+  SUBMISSION
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique @db.VarChar(191)
+  name            String       @db.VarChar(191)
+  emailVerified   Boolean      @default(false)
+  image           String?      @db.VarChar(2048)
+  role            String       @default("editor") @db.VarChar(50)
+  banned          Boolean?     @default(false)
+  banReason       String?      @db.Text
+  banExpires      DateTime?
+  sessions        Session[]
+  accounts        Account[]
+  posts           BlogPost[]
+  assignedLeads   Lead[]       @relation("LeadAssignee")
+  activities      LeadActivity[]
+  contactActivities ContactActivity[]
+  ticketActivities TicketActivity[]
+  approvedProjects PortfolioProject[] @relation("PortfolioApprover")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  expiresAt      DateTime
+  token          String   @unique @db.VarChar(191)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?  @db.VarChar(191)
+  userAgent      String?  @db.Text
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?  @db.VarChar(191)
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String    @db.VarChar(191)
+  providerId            String    @db.VarChar(191)
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String   @db.VarChar(191)
+  value      String   @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@index([identifier])
+}
+
+model BlogPost {
+  id              String      @id @default(cuid())
+  slug            String      @unique @db.VarChar(191)
+  title           String      @db.VarChar(255)
+  excerpt         String?     @db.Text
+  content         String      @db.LongText
+  status          BlogStatus  @default(DRAFT)
+  seoTitle        String?     @db.VarChar(255)
+  seoDescription  String?     @db.VarChar(320)
+  coverMediaId    String?
+  coverMedia      Media?       @relation(fields: [coverMediaId], references: [id], onDelete: SetNull)
+  authorId        String
+  author          User        @relation(fields: [authorId], references: [id])
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([coverMediaId])
+}
+
+model Service {
+  id             String        @id @default(cuid())
+  slug           String        @unique @db.VarChar(191)
+  title          String        @db.VarChar(255)
+  eyebrow        String        @db.VarChar(191)
+  summary        String        @db.Text
+  content        String        @db.LongText
+  category       String        @db.VarChar(100)
+  icon           String        @db.VarChar(50)
+  status         ServiceStatus @default(DRAFT)
+  indexable      Boolean       @default(false)
+  seoTitle       String?       @db.VarChar(255)
+  seoDescription String?       @db.VarChar(320)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  @@index([status, publishedAt])
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  storageKey  String   @unique @db.VarChar(512)
+  url         String   @db.VarChar(2048)
+  mimeType    String   @db.VarChar(191)
+  fileName    String   @db.VarChar(255)
+  altText     String?  @db.VarChar(255)
+  sizeBytes   Int
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+  posts       BlogPost[]
+  portfolioProjects PortfolioProject[]
+}
+
+model PortfolioProject {
+  id             String          @id @default(cuid())
+  slug           String          @unique @db.VarChar(191)
+  title          String          @db.VarChar(255)
+  clientName     String          @db.VarChar(191)
+  industry       String?         @db.VarChar(100)
+  services       String?         @db.VarChar(255)
+  projectUrl     String?         @db.VarChar(2048)
+  summary        String          @db.Text
+  challenge      String          @db.LongText
+  approach       String          @db.LongText
+  outcome        String?         @db.LongText
+  coverMediaId   String?
+  coverMedia     Media?          @relation(fields: [coverMediaId], references: [id], onDelete: SetNull)
+  status         PortfolioStatus @default(DRAFT)
+  indexable      Boolean         @default(false)
+  seoTitle       String?         @db.VarChar(255)
+  seoDescription String?         @db.VarChar(320)
+  publishedAt    DateTime?
+  approvedAt     DateTime?
+  approvedById   String?
+  approvedBy     User?           @relation("PortfolioApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  @@index([status, publishedAt])
+  @@index([coverMediaId])
+  @@index([approvedById])
+}
+
+model Lead {
+  id              String         @id @default(cuid())
+  name            String         @db.VarChar(191)
+  email           String?        @db.VarChar(191)
+  phone           String         @unique @db.VarChar(16)
+  serviceInterest String?        @db.VarChar(191)
+  budgetRange     String?        @db.VarChar(50)
+  message         String?        @db.Text
+  consentAt       DateTime?
+  status          LeadStatus     @default(NEW)
+  sourcePage      String         @db.VarChar(2048)
+  utmSource       String?        @db.VarChar(191)
+  utmMedium       String?        @db.VarChar(191)
+  utmCampaign     String?        @db.VarChar(191)
+  utmTerm         String?        @db.VarChar(191)
+  utmContent      String?        @db.VarChar(191)
+  assignedToId    String?
+  assignedTo      User?          @relation("LeadAssignee", fields: [assignedToId], references: [id])
+  activities      LeadActivity[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([phone])
+  @@index([assignedToId])
+}
+
+model LeadActivity {
+  id          String           @id @default(cuid())
+  leadId      String
+  lead        Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  actorId     String?
+  actor       User?            @relation(fields: [actorId], references: [id])
+  type        LeadActivityType
+  note        String?          @db.Text
+  submission  Json?
+  fromStatus  LeadStatus?
+  toStatus    LeadStatus?
+  createdAt   DateTime         @default(now())
+  @@index([leadId, createdAt])
+  @@index([actorId])
+}
+
+model EnquiryRateLimit {
+  key         String   @id @db.VarChar(64)
+  windowStart DateTime
+  count       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactMessage {
+  id          String        @id @default(cuid())
+  name        String        @db.VarChar(191)
+  email       String        @db.VarChar(191)
+  phone       String?       @db.VarChar(50)
+  subject     String?       @db.VarChar(255)
+  message     String        @db.Text
+  status      ContactStatus @default(NEW)
+  sourcePage  String?       @db.VarChar(2048)
+  consentAt   DateTime?
+  activities  ContactActivity[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model ContactActivity {
+  id          String              @id @default(cuid())
+  contactId   String
+  contact     ContactMessage      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  actorId     String
+  actor       User                @relation(fields: [actorId], references: [id])
+  type        ContactActivityType
+  note        String?             @db.Text
+  fromStatus  ContactStatus?
+  toStatus    ContactStatus?
+  createdAt   DateTime            @default(now())
+  @@index([contactId, createdAt])
+  @@index([actorId])
+}
+
+model SupportTicket {
+  id          String           @id @default(cuid())
+  reference   String           @unique @db.VarChar(20)
+  name        String           @db.VarChar(191)
+  email       String           @db.VarChar(191)
+  phone       String           @db.VarChar(50)
+  websiteUrl  String           @db.VarChar(2048)
+  category    String           @db.VarChar(50)
+  subject     String           @db.VarChar(255)
+  description String           @db.Text
+  status      TicketStatus     @default(OPEN)
+  sourcePage  String           @db.VarChar(2048)
+  consentAt   DateTime
+  activities  TicketActivity[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model TicketActivity {
+  id          String             @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId     String
+  actor       User               @relation(fields: [actorId], references: [id])
+  type        TicketActivityType
+  note        String?            @db.Text
+  fromStatus  TicketStatus?
+  toStatus    TicketStatus?
+  createdAt   DateTime           @default(now())
+  @@index([ticketId, createdAt])
+  @@index([actorId])
+}
