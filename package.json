@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build --webpack",
+    "build": "prisma generate && prisma migrate resolve --applied 20261009000000_support_tickets && prisma migrate deploy && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
