@@ -2,6 +2,7 @@ import { notifyLead } from "@/lib/email";
 import { consumeEnquiryRateLimit } from "@/lib/rate-limit";
 import { saveEnquiry } from "@/features/leads/service";
 import { validateEnquiry } from "@/features/leads/validation";
+import { trustedRequestOrigin } from "@/lib/request-origin";
 
 export const runtime = "nodejs";
 const MAX_BODY_BYTES = 8192;
@@ -24,8 +25,8 @@ async function readLimitedBody(request: Request): Promise<string | null> {
 }
 
 export async function POST(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) {
+  const origin = trustedRequestOrigin(request);
+  if (!origin) {
     return Response.json({ error: "Invalid request origin." }, { status: 403 });
   }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {

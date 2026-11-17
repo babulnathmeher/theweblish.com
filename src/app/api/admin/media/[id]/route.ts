@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { hasAdminAccess } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import { mediaStorage, storageConfig } from "@/features/media/storage";
+import { trustedRequestOrigin } from "@/lib/request-origin";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return Response.json({ error: "Authentication required." }, { status: 401 });
   if (!hasAdminAccess(session)) return Response.json({ error: "Access denied." }, { status: 403 });
-  if (request.headers.get("origin") !== new URL(request.url).origin) return Response.json({ error: "Invalid request origin." }, { status: 403 });
+  if (!trustedRequestOrigin(request)) return Response.json({ error: "Invalid request origin." }, { status: 403 });
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return Response.json({ error: "Send JSON data." }, { status: 415 });
   const { id } = await params;
   if (!id || id.length > 64) return Response.json({ error: "Invalid image." }, { status: 400 });
@@ -53,7 +54,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return Response.json({ error: "Authentication required." }, { status: 401 });
   if (!hasAdminAccess(session)) return Response.json({ error: "Access denied." }, { status: 403 });
-  if (request.headers.get("origin") !== new URL(request.url).origin) return Response.json({ error: "Invalid request origin." }, { status: 403 });
+  if (!trustedRequestOrigin(request)) return Response.json({ error: "Invalid request origin." }, { status: 403 });
   const { id } = await params;
   if (!id || id.length > 64) return Response.json({ error: "Invalid image." }, { status: 400 });
   const config = storageConfig();

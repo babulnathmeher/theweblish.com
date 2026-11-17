@@ -2,6 +2,7 @@ import { validateContact } from "@/features/contacts/validation";
 import { prisma } from "@/lib/prisma";
 import { consumeEnquiryRateLimit } from "@/lib/rate-limit";
 import { notifyContact } from "@/lib/email";
+import { trustedRequestOrigin } from "@/lib/request-origin";
 
 export const runtime = "nodejs";
 const MAX_BODY_BYTES = 8192;
@@ -24,8 +25,8 @@ async function readBody(request: Request): Promise<string | null> {
 }
 
 export async function POST(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) return Response.json({ error: "Invalid request origin." }, { status: 403 });
+  const origin = trustedRequestOrigin(request);
+  if (!origin) return Response.json({ error: "Invalid request origin." }, { status: 403 });
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return Response.json({ error: "Send JSON." }, { status: 415 });
   if (Number(request.headers.get("content-length") || 0) > MAX_BODY_BYTES) return Response.json({ error: "Request is too large." }, { status: 413 });
   const body = await readBody(request);

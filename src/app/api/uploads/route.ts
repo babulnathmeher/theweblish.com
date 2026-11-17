@@ -4,6 +4,7 @@ import { contentRole } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import { mediaStorage, storageConfig } from "@/features/media/storage";
 import { MAX_IMAGE_BYTES, validateImage } from "@/features/media/validation";
+import { trustedRequestOrigin } from "@/lib/request-origin";
 
 export const runtime = "nodejs";
 const MAX_REQUEST_BYTES = MAX_IMAGE_BYTES + 64 * 1024;
@@ -31,8 +32,7 @@ export async function POST(request: Request) {
   if (!contentRole(session) || session.user.role === "author") return Response.json({ error: "Access denied." }, { status: 403 });
   const config = storageConfig();
   if (!config) return Response.json({ error: "Media storage is not configured." }, { status: 503 });
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) return Response.json({ error: "Invalid request origin." }, { status: 403 });
+  if (!trustedRequestOrigin(request)) return Response.json({ error: "Invalid request origin." }, { status: 403 });
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.toLowerCase().startsWith("multipart/form-data;")) return Response.json({ error: "Send multipart form data." }, { status: 415 });
   if (Number(request.headers.get("content-length") || 0) > MAX_REQUEST_BYTES) return Response.json({ error: "Image is too large." }, { status: 413 });
