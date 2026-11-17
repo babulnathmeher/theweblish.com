@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240" role="img" aria-labelledby="title desc">
+  <title id="title">Hostinger Partner</title>
+  <desc id="desc">Hostinger Partner badge in black on a white rounded rectangle.</desc>
+  <rect x="3" y="3" width="634" height="234" rx="61" fill="#fff" stroke="#dedede" stroke-width="6"/>
+  <g fill="#161719">
+    <path d="M60 55 91 72v42h49L60 87V55Z"/>
+    <path d="m141 55 31 16v43l-31-17V55Z"/>
+    <path d="M60 121h112l-31 20H91l-31-17v-3Z"/>
+    <path d="M60 128 91 145v39l-31-17v-39Z"/>
+    <path d="M141 145h31v39l-31-17v-22Z"/>
+    <text x="208" y="108" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" letter-spacing="5">HOSTINGER</text>
+    <text x="208" y="174" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="400">Partner</text>
+  </g>
+</svg>
